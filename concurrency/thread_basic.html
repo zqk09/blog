@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="utf-8">
+  <title>Life is Hard</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://lifeishard.cn/concurrency/thread_basic.html">
+  <!-- Alternative links -->
+  
+    
+      <link rel="alternative" hreflang="zh-cn" href="http://lifeishard.cn/concurrency/thread_basic.html">
+    
+      <link rel="alternative" hreflang="en" href="http://lifeishard.cn/en/concurrency/thread_basic.html">
+    
+  
+  <!-- Icon -->
+  <link rel="apple-touch-icon" sizes="57x57" href="/icon/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="114x114" href="/icon/apple-touch-icon-114x114.png">
+  <link rel="apple-touch-icon" sizes="72x72" href="/icon/apple-touch-icon-72x72.png">
+  <link rel="apple-touch-icon" sizes="144x144" href="/icon/apple-touch-icon-144x144.png">
+  <link rel="apple-touch-icon" sizes="60x60" href="/icon/apple-touch-icon-60x60.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/icon/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="/icon/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/icon/apple-touch-icon-152x152.png">
+  <link rel="icon" type="image/png" href="/icon/favicon-196x196.png" sizes="196x196">
+  <link rel="icon" type="image/png" href="/icon/favicon-160x160.png" sizes="160x160">
+  <link rel="icon" type="image/png" href="/icon/favicon-96x96.png" sizes="96x96">
+  <link rel="icon" type="image/png" href="/icon/favicon-16x16.png" sizes="16x16">
+  <link rel="icon" type="image/png" href="/icon/favicon-32x32.png" sizes="32x32">
+  <meta name="msapplication-TileColor" content="#2f83cd">
+  <meta name="msapplication-TileImage" content="/icon/mstile-144x144.png">
+  <!-- CSS -->
+  <!-- build:css build/css/navy.css -->
+  <link rel="stylesheet" href="/css/navy.css">
+  <!-- endbuild -->
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.3.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css">
+  <!-- RSS -->
+  <link rel="alternate" href="/atom.xml" title="Life is Hard">
+  <!-- Open Graph -->
+  <meta name="description" content="2.1 线程管理的基础每个程序至少有一个线程：执行main()函数的线程，其余线程有其各自的入口函数。线程与原始线程(以main()为入口函数的线程)同时运行。如同main()函数执行完会退出一样，当线程执行完入口函数后，线程也会退出。在为一个线程创建了一个std::thread对象后，需要等待这个线程结束；不过，线程需要先进行启动。下面就来启动线程。 2.1.1 启动线程第1章中，线程在std:">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Life is Hard">
+<meta property="og:url" content="http://lifeishard.cn/concurrency/thread_basic.html">
+<meta property="og:site_name" content="Life is Hard">
+<meta property="og:description" content="2.1 线程管理的基础每个程序至少有一个线程：执行main()函数的线程，其余线程有其各自的入口函数。线程与原始线程(以main()为入口函数的线程)同时运行。如同main()函数执行完会退出一样，当线程执行完入口函数后，线程也会退出。在为一个线程创建了一个std::thread对象后，需要等待这个线程结束；不过，线程需要先进行启动。下面就来启动线程。 2.1.1 启动线程第1章中，线程在std:">
+<meta property="og:locale" content="zh-cn">
+<meta property="og:updated_time" content="2019-09-02T15:09:39.015Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Life is Hard">
+<meta name="twitter:description" content="2.1 线程管理的基础每个程序至少有一个线程：执行main()函数的线程，其余线程有其各自的入口函数。线程与原始线程(以main()为入口函数的线程)同时运行。如同main()函数执行完会退出一样，当线程执行完入口函数后，线程也会退出。在为一个线程创建了一个std::thread对象后，需要等待这个线程结束；不过，线程需要先进行启动。下面就来启动线程。 2.1.1 启动线程第1章中，线程在std:">
+  <!-- Google Analytics -->
+  
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-98874643-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+</head>
+
+<body>
+  <div id="container">
+    <header id="header" class="wrapper">
+  <div id="header-inner" class="inner">
+    <h1 id="logo-wrap">
+      <a href="/" id="logo">Hexo</a>
+    </h1>
+    <nav id="main-nav">
+      <a href="/docs/" class="main-nav-link">文档</a><a href="/api/" class="main-nav-link">API</a><a href="/concurrency/" class="main-nav-link">并发</a><a href="/news/" class="main-nav-link">新闻</a><a href="/plugins/" class="main-nav-link">插件</a><a href="/themes/" class="main-nav-link">主题</a>
+      <a href="https://github.com/zqk09/blog" class="main-nav-link"><i class="fa fa-github-alt"></i></a>
+      <div id="search-input-wrap">
+        <div id="search-input-icon">
+          <i class="fa fa-search"></i>
+        </div>
+        <input type="search" id="search-input" placeholder="Search...">
+      </div>
+    </nav>
+    <div id="lang-select-wrap">
+      <label id="lang-select-label"><i class="fa fa-globe"></i><span>简体中文</span></label>
+      <select id="lang-select" data-canonical="">
+        
+          <option value="zh-cn" selected>简体中文</option>
+        
+          <option value="en">English</option>
+        
+      </select>
+    </div>
+    <a id="mobile-nav-toggle">
+      <span class="mobile-nav-toggle-bar"></span>
+      <span class="mobile-nav-toggle-bar"></span>
+      <span class="mobile-nav-toggle-bar"></span>
+    </a>
+  </div>
+</header>
+
+    <div id="content-wrap">
+  <div id="content" class="wrapper">
+    <div id="content-inner">
+      <article class="article-container" itemscope itemtype="http://schema.org/Article">
+        <div class="article-inner">
+          <div class="article">
+            <div class="inner">
+              <header class="article-header">
+                <h1 class="article-title" itemprop="name"></h1>
+                <a href="https://github.com/hexojs/site/edit/master/source/concurrency/thread_basic.md" class="article-edit-link" title="改进本文"><i class="fa fa-pencil"></i></a>
+              </header>
+              <div class="article-content" itemprop="articleBody">
+                <h1 id="2-1-线程管理的基础" class="article-heading"><a href="#2-1-线程管理的基础" class="headerlink" title="2.1 线程管理的基础"></a>2.1 线程管理的基础<a class="article-anchor" href="#2-1-线程管理的基础" aria-hidden="true"></a></h1><p>每个程序至少有一个线程：执行main()函数的线程，其余线程有其各自的入口函数。线程与原始线程(以main()为入口函数的线程)同时运行。如同main()函数执行完会退出一样，当线程执行完入口函数后，线程也会退出。在为一个线程创建了一个<code>std::thread</code>对象后，需要等待这个线程结束；不过，线程需要先进行启动。下面就来启动线程。</p>
+<h2 id="2-1-1-启动线程" class="article-heading"><a href="#2-1-1-启动线程" class="headerlink" title="2.1.1 启动线程"></a>2.1.1 启动线程<a class="article-anchor" href="#2-1-1-启动线程" aria-hidden="true"></a></h2><p>第1章中，线程在<code>std::thread</code>对象创建(为线程指定任务)时启动。最简单的情况下，任务也会很简单，通常是无参数无返回的函数。这种函数在其所属线程上运行，直到函数执行完毕，线程也就结束了。在一些极端情况下，线程运行时，任务中的函数对象需要通过某种通讯机制进行参数的传递，或者执行一系列独立操作;可以通过通讯机制传递信号，让线程停止。线程要做什么，以及什么时候启动，其实都无关紧要。总之，使用C++线程库启动线程，可以归结为构造<code>std::thread</code>对象：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">do_some_work</span><span class="params">()</span></span>;</span><br><span class="line"><span class="built_in">std</span>::<span class="function">thread <span class="title">my_thread</span><span class="params">(do_some_work)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>为了让编译器识别<code>std::thread</code>类，这个简单的例子也要包含<code>&lt;thread&gt;</code>头文件。如同大多数C++标准库一样，<code>std::thread</code>可以用可调用类型构造，将带有函数调用符类型的实例传入<code>std::thread</code>类中，替换默认的构造函数。</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">background_task</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">operator</span><span class="params">()</span><span class="params">()</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    do_something();</span><br><span class="line">    do_something_else();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">background_task f;</span><br><span class="line"><span class="built_in">std</span>::<span class="function">thread <span class="title">my_thread</span><span class="params">(f)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>代码中，提供的函数对象会复制到新线程的存储空间当中，函数对象的执行和调用都在线程的内存空间中进行。函数对象的副本应与原始函数对象保持一致，否则得到的结果会与我们的期望不同。</p>
+<p>有件事需要注意，当把函数对象传入到线程构造函数中时，需要避免“<a href="http://en.wikipedia.org/wiki/Most_vexing_parse" target="_blank" rel="noopener">最令人头痛的语法解析</a>”(<em>C++’s most vexing parse</em>, <a href="http://qiezhuifeng.diandian.com/post/2012-08-27/40038339477" target="_blank" rel="noopener">中文简介</a>)。如果你传递了一个临时变量，而不是一个命名的变量；C++编译器会将其解析为函数声明，而不是类型对象的定义。</p>
+<p>例如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">std::thread my_thread(background_task());</span><br></pre></td></tr></table></figure>
+
+<p>这里相当与声明了一个名为my_thread的函数，这个函数带有一个参数(函数指针指向没有参数并返回background_task对象的函数)，返回一个<code>std::thread</code>对象的函数，而非启动了一个线程。</p>
+<p>使用在前面命名函数对象的方式，或使用多组括号①，或使用新统一的初始化语法②，可以避免这个问题。</p>
+<p>如下所示：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="function">thread <span class="title">my_thread</span><span class="params">((background_task()))</span></span>;  <span class="comment">// 1</span></span><br><span class="line"><span class="built_in">std</span>::thread my_thread&#123;background_task()&#125;;    <span class="comment">// 2</span></span><br></pre></td></tr></table></figure>
+
+<p>使用lambda表达式也能避免这个问题。lambda表达式是C++11的一个新特性，它允许使用一个可以捕获局部变量的局部函数(可以避免传递参数，参见2.2节)。想要具体的了解lambda表达式，可以阅读附录A的A.5节。之前的例子可以改写为lambda表达式的类型：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="function">thread <span class="title">my_thread</span><span class="params">([]&#123;</span></span></span><br><span class="line"><span class="function"><span class="params">  do_something();</span></span></span><br><span class="line"><span class="function"><span class="params">  do_something_else();</span></span></span><br><span class="line"><span class="function"><span class="params">&#125;)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>启动了线程，你需要明确是要等待线程结束(_加入式_——参见2.1.2节)，还是让其自主运行(_分离式_——参见2.1.3节)。如果<code>std::thread</code>对象销毁之前还没有做出决定，程序就会终止(<code>std::thread</code>的析构函数会调用<code>std::terminate()</code>)。因此，即便是有异常存在，也需要确保线程能够正确的_加入_(joined)或_分离_(detached)。2.1.3节中，会介绍对应的方法来处理这两种情况。需要注意的是，必须在<code>std::thread</code>对象销毁之前做出决定，否则你的程序将会终止(<code>std::thread</code>的析构函数会调用<code>std::terminate()</code>，这时再去决定会触发相应异常)。</p>
+<p>如果不等待线程，就必须保证线程结束之前，可访问的数据得有效性。这不是一个新问题——单线程代码中，对象销毁之后再去访问，也会产生未定义行为——不过，线程的生命周期增加了这个问题发生的几率。</p>
+<p>这种情况很可能发生在线程还没结束，函数已经退出的时候，这时线程函数还持有函数局部变量的指针或引用。下面的清单中就展示了这样的一种情况。</p>
+<p>清单2.1  函数已经返回，线程依旧访问局部变量</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">func</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="keyword">int</span>&amp; i;</span><br><span class="line">  func(<span class="keyword">int</span>&amp; i_) : i(i_) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">void</span> <span class="title">operator</span><span class="params">()</span> <span class="params">()</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">unsigned</span> j=<span class="number">0</span> ; j&lt;<span class="number">1000000</span> ; ++j)</span><br><span class="line">    &#123;</span><br><span class="line">      do_something(i);           <span class="comment">// 1 潜在访问隐患：悬空引用</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">oops</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> some_local_state=<span class="number">0</span>;</span><br><span class="line">  <span class="function">func <span class="title">my_func</span><span class="params">(some_local_state)</span></span>;</span><br><span class="line">  <span class="built_in">std</span>::<span class="function">thread <span class="title">my_thread</span><span class="params">(my_func)</span></span>;</span><br><span class="line">  my_thread.detach();          <span class="comment">// 2 不等待线程结束</span></span><br><span class="line">&#125;                              <span class="comment">// 3 新线程可能还在运行</span></span><br></pre></td></tr></table></figure>
+
+<p>这个例子中，已经决定不等待线程结束(使用了detach() ② )，所以当oops()函数执行完成时③，新线程中的函数可能还在运行。如果线程还在运行，它就会去调用do_something(i)函数①，这时就会访问已经销毁的变量。如同一个单线程程序——允许在函数完成后继续持有局部变量的指针或引用；当然，这从来就不是一个好主意——这种情况发生时，错误并不明显，会使多线程更容易出错。运行顺序参考表2.1。</p>
+<p>表2.1 分离线程在局部变量销毁后，仍对该变量进行访问</p>
+<table>
+<thead>
+<tr>
+<th align="center">主线程</th>
+<th align="center">新线程</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">使用some_local_state构造my_func</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">开启新线程my_thread</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">启动</td>
+</tr>
+<tr>
+<td align="center"></td>
+<td align="center">调用func::operator()</td>
+</tr>
+<tr>
+<td align="center">将my_thread分离</td>
+<td align="center">执行func::operator();可能会在do_something中调用some_local_state的引用</td>
+</tr>
+<tr>
+<td align="center">销毁some_local_state</td>
+<td align="center">持续运行</td>
+</tr>
+<tr>
+<td align="center">退出oops函数</td>
+<td align="center">持续执行func::operator()；可能会在do_something中调用some_local_state的引用 –&gt; 导致未定义行为</td>
+</tr>
+</tbody></table>
+<p>处理这种情况的常规方法：使线程函数的功能齐全，将数据复制到线程中，而非复制到共享数据中。如果使用一个可调用的对象作为线程函数，这个对象就会复制到线程中，而后原始对象就会立即销毁。但对于对象中包含的指针和引用还需谨慎，例如清单2.1所示。使用一个能访问局部变量的函数去创建线程是一个糟糕的主意(除非<strong>十分确定</strong>线程会在函数完成前结束)。</p>
+<p>此外，可以通过join()函数来确保线程在函数完成前结束。</p>
+<h2 id="2-1-2-等待线程完成" class="article-heading"><a href="#2-1-2-等待线程完成" class="headerlink" title="2.1.2 等待线程完成"></a>2.1.2 等待线程完成<a class="article-anchor" href="#2-1-2-等待线程完成" aria-hidden="true"></a></h2><p>如果需要等待线程，相关的<code>std::thread</code>实例需要使用join()。清单2.1中，将<code>my_thread.detach()</code>替换为<code>my_thread.join()</code>，就可以确保局部变量在线程完成后，才被销毁。在这种情况下，因为原始线程在其生命周期中并没有做什么事，使得用一个独立的线程去执行函数变得收益甚微，但在实际编程中，原始线程要么有自己的工作要做；要么会启动多个子线程来做一些有用的工作，并等待这些线程结束。</p>
+<p>join()是简单粗暴的等待线程完成或不等待。当你需要对等待中的线程有更灵活的控制时，比如，看一下某个线程是否结束，或者只等待一段时间(超过时间就判定为超时)。想要做到这些，你需要使用其他机制来完成，比如条件变量和_期待_(futures)，相关的讨论将会在第4章继续。调用join()的行为，还清理了线程相关的存储部分，这样<code>std::thread</code>对象将不再与已经完成的线程有任何关联。这意味着，只能对一个线程使用一次join();一旦已经使用过join()，<code>std::thread</code>对象就不能再次加入了，当对其使用joinable()时，将返回false。</p>
+<h2 id="2-1-3-特殊情况下的等待" class="article-heading"><a href="#2-1-3-特殊情况下的等待" class="headerlink" title="2.1.3 特殊情况下的等待"></a>2.1.3 特殊情况下的等待<a class="article-anchor" href="#2-1-3-特殊情况下的等待" aria-hidden="true"></a></h2><p>如前所述，需要对一个还未销毁的<code>std::thread</code>对象使用join()或detach()。如果想要分离一个线程，可以在线程启动后，直接使用detach()进行分离。如果打算等待对应线程，则需要细心挑选调用join()的位置。当在线程运行之后产生异常，在join()调用之前抛出，就意味着这次调用会被跳过。</p>
+<p>避免应用被抛出的异常所终止，就需要作出一个决定。通常，当倾向于在无异常的情况下使用join()时，需要在异常处理过程中调用join()，从而避免生命周期的问题。下面的程序清单是一个例子。</p>
+<p>清单 2.2 等待线程完成</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">func</span>;</span> <span class="comment">// 定义在清单2.1中</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">f</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> some_local_state=<span class="number">0</span>;</span><br><span class="line">  <span class="function">func <span class="title">my_func</span><span class="params">(some_local_state)</span></span>;</span><br><span class="line">  <span class="built_in">std</span>::<span class="function">thread <span class="title">t</span><span class="params">(my_func)</span></span>;</span><br><span class="line">  <span class="keyword">try</span></span><br><span class="line">  &#123;</span><br><span class="line">    do_something_in_current_thread();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">catch</span>(...)</span><br><span class="line">  &#123;</span><br><span class="line">    t.join();  <span class="comment">// 1</span></span><br><span class="line">    <span class="keyword">throw</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  t.join();  <span class="comment">// 2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>清单2.2中的代码使用了<code>try/catch</code>块确保访问本地状态的线程退出后，函数才结束。当函数正常退出时，会执行到②处；当函数执行过程中抛出异常，程序会执行到①处。<code>try/catch</code>块能轻易的捕获轻量级错误，所以这种情况，并非放之四海而皆准。如需确保线程在函数之前结束——查看是否因为线程函数使用了局部变量的引用，以及其他原因——而后再确定一下程序可能会退出的途径，无论正常与否，可以提供一个简洁的机制，来做解决这个问题。</p>
+<p>一种方式是使用“资源获取即初始化方式”(RAII，Resource Acquisition Is Initialization)，并且提供一个类，在析构函数中使用<strong>join()</strong>，如同下面清单中的代码。看它如何简化f()函数。</p>
+<p>清单 2.3 使用RAII等待线程完成</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">thread_guard</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">  <span class="built_in">std</span>::thread&amp; t;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">  explicit thread_guard(std::thread&amp; t_):</span><br><span class="line">    t(t_)</span><br><span class="line">  &#123;&#125;</span><br><span class="line">  ~thread_guard()</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">if</span>(t.joinable()) <span class="comment">// 1</span></span><br><span class="line">    &#123;</span><br><span class="line">      t.join();      <span class="comment">// 2</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  thread_guard(thread_guard <span class="keyword">const</span>&amp;)=<span class="keyword">delete</span>;   <span class="comment">// 3</span></span><br><span class="line">  thread_guard&amp; <span class="keyword">operator</span>=(thread_guard <span class="keyword">const</span>&amp;)=<span class="keyword">delete</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">func</span>;</span> <span class="comment">// 定义在清单2.1中</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">f</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">int</span> some_local_state=<span class="number">0</span>;</span><br><span class="line">  <span class="function">func <span class="title">my_func</span><span class="params">(some_local_state)</span></span>;</span><br><span class="line">  <span class="built_in">std</span>::<span class="function">thread <span class="title">t</span><span class="params">(my_func)</span></span>;</span><br><span class="line">  <span class="function">thread_guard <span class="title">g</span><span class="params">(t)</span></span>;</span><br><span class="line">  do_something_in_current_thread();</span><br><span class="line">&#125;    <span class="comment">// 4</span></span><br></pre></td></tr></table></figure>
+
+<p>当线程执行到④处时，局部对象就要被逆序销毁了。因此，thread_guard对象g是第一个被销毁的，这时线程在析构函数中被加入②到原始线程中。即使do_something_in_current_thread抛出一个异常，这个销毁依旧会发生。</p>
+<p>在thread_guard的析构函数的测试中，首先判断线程是否已加入①，如果没有会调用join()②进行加入。这很重要，因为join()只能对给定的对象调用一次，所以对给已加入的线程再次进行加入操作时，将会导致错误。</p>
+<p>拷贝构造函数和拷贝赋值操作被标记为<code>=delete</code>③，是为了不让编译器自动生成它们。直接对一个对象进行拷贝或赋值是危险的，因为这可能会弄丢已经加入的线程。通过删除声明，任何尝试给thread_guard对象赋值的操作都会引发一个编译错误。想要了解删除函数的更多知识，请参阅附录A的A.2节。</p>
+<p>如果不想等待线程结束，可以分离_(_detaching)线程，从而避免<em>异常安全</em>(exception-safety)问题。不过，这就打破了线程与<code>std::thread</code>对象的联系，即使线程仍然在后台运行着，分离操作也能确保<code>std::terminate()</code>在<code>std::thread</code>对象销毁才被调用。</p>
+<h2 id="2-1-4-后台运行线程" class="article-heading"><a href="#2-1-4-后台运行线程" class="headerlink" title="2.1.4 后台运行线程"></a>2.1.4 后台运行线程<a class="article-anchor" href="#2-1-4-后台运行线程" aria-hidden="true"></a></h2><p>使用detach()会让线程在后台运行，这就意味着主线程不能与之产生直接交互。也就是说，不会等待这个线程结束；如果线程分离，那么就不可能有<code>std::thread</code>对象能引用它，分离线程的确在后台运行，所以分离线程不能被加入。不过C++运行库保证，当线程退出时，相关资源的能够正确回收，后台线程的归属和控制C++运行库都会处理。</p>
+<p>通常称分离线程为_守护线程_(daemon threads)，UNIX中守护线程是指，没有任何显式的用户接口，并在后台运行的线程。这种线程的特点就是长时间运行；线程的生命周期可能会从某一个应用起始到结束，可能会在后台监视文件系统，还有可能对缓存进行清理，亦或对数据结构进行优化。另一方面，分离线程的另一方面只能确定线程什么时候结束，_发后即忘_(fire and forget)的任务就使用到线程的这种方式。</p>
+<p>如2.1.2节所示，调用<code>std::thread</code>成员函数detach()来分离一个线程。之后，相应的<code>std::thread</code>对象就与实际执行的线程无关了，并且这个线程也无法加入：</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="function">thread <span class="title">t</span><span class="params">(do_background_work)</span></span>;</span><br><span class="line">t.detach();</span><br><span class="line">assert(!t.joinable());</span><br></pre></td></tr></table></figure>
+
+<p>为了从<code>std::thread</code>对象中分离线程(前提是有可进行分离的线程),不能对没有执行线程的<code>std::thread</code>对象使用detach(),也是join()的使用条件，并且要用同样的方式进行检查——当<code>std::thread</code>对象使用t.joinable()返回的是true，就可以使用t.detach()。</p>
+<p>试想如何能让一个文字处理应用同时编辑多个文档。无论是用户界面，还是在内部应用内部进行，都有很多的解决方法。虽然，这些窗口看起来是完全独立的，每个窗口都有自己独立的菜单选项，但他们却运行在同一个应用实例中。一种内部处理方式是，让每个文档处理窗口拥有自己的线程；每个线程运行同样的的代码，并隔离不同窗口处理的数据。如此这般，打开一个文档就要启动一个新线程。因为是对独立的文档进行操作，所以没有必要等待其他线程完成。因此，这里就可以让文档处理窗口运行在分离的线程上。</p>
+<p>下面代码简要的展示了这种方法：</p>
+<p>清单2.4 使用分离线程去处理其他文档</p>
+<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">edit_document</span><span class="params">(<span class="built_in">std</span>::<span class="built_in">string</span> <span class="keyword">const</span>&amp; filename)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  open_document_and_display_gui(filename);</span><br><span class="line">  <span class="keyword">while</span>(!done_editing())</span><br><span class="line">  &#123;</span><br><span class="line">    user_command cmd=get_user_input();</span><br><span class="line">    <span class="keyword">if</span>(cmd.type==open_new_document)</span><br><span class="line">    &#123;</span><br><span class="line">      <span class="built_in">std</span>::<span class="built_in">string</span> <span class="keyword">const</span> new_name=get_filename_from_user();</span><br><span class="line">      <span class="built_in">std</span>::<span class="function">thread <span class="title">t</span><span class="params">(edit_document,new_name)</span></span>;  <span class="comment">// 1</span></span><br><span class="line">      t.detach();  <span class="comment">// 2</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">       process_user_input(cmd);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果用户选择打开一个新文档，需要启动一个新线程去打开新文档①，并分离线程②。与当前线程做出的操作一样，新线程只不过是打开另一个文件而已。所以，edit_document函数可以复用，通过传参的形式打开新的文件。</p>
+<p>这个例子也展示了传参启动线程的方法：不仅可以向<code>std::thread</code>构造函数①传递函数名，还可以传递函数所需的参数(实参)。C++线程库的方式也不是很复杂。当然，也有其他方法完成这项功能，比如:使用一个带有数据成员的成员函数，代替一个需要传参的普通函数。</p>
+
+              </div>
+              <footer class="article-footer">
+                <time class="article-footer-updated" datetime="2019-09-02T15:09:39.015Z" itemprop="dateModified">上次更新：2019-09-02</time>
+                <a href="preface.html" class="article-footer-prev" title="前言"><i class="fa fa-chevron-left"></i><span>上一页</span></a>
+              </footer>
+              
+<section id="comments">
+    
+    <div id="gitment-container"></div>
+    
+</section>
+    <link rel="stylesheet" href="https://billts.site/extra_css/gitment.css">
+    <script src="https://billts.site/js/gitment.js"></script>
+   
+       <script type="text/javascript">
+           var gitment = new Gitment({
+              id: window.location.pathname, 
+               owner: 'zqk09',
+               repo: 'blog',
+               oauth: {
+                   client_id: 'ddc719fd948c696f4cc5',
+                   client_secret: 'bb16cf5657748c6133c036fa8b0eb9071d1855eb',
+               }});
+           gitment.render('gitment-container');
+       </script>
+   
+
+            </div>
+          </div>
+          <aside id="article-toc" role="navigation">
+            <div id="article-toc-inner">
+              <strong class="sidebar-title">目录</strong>
+              <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#2-1-线程管理的基础"><span class="toc-text">2.1 线程管理的基础</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-1-启动线程"><span class="toc-text">2.1.1 启动线程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-2-等待线程完成"><span class="toc-text">2.1.2 等待线程完成</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-3-特殊情况下的等待"><span class="toc-text">2.1.3 特殊情况下的等待</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-4-后台运行线程"><span class="toc-text">2.1.4 后台运行线程</span></a></li></ol></li></ol>
+              <a href="#" id="article-toc-top">回到顶部</a>
+            </div>
+          </aside>
+        </div>
+      </article>
+      <aside id="sidebar" role="navigation">
+  <div class="inner">
+    <strong class="sidebar-title">基础</strong><a href="preface.html" class="sidebar-link">前言</a><a href="thread_basic.html" class="sidebar-link current">线程基础</a>
+  </div>
+</aside>
+    </div>
+  </div>
+</div>
+
+    <footer id="footer" class="wrapper">
+  <div class="inner">
+    <div id="footer-copyright">
+      &copy; 2019 <a href="https://github.com/hexojs/hexo/graphs/contributors" target="_blank">zz</a><br>
+      Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>.
+    </div>
+    <div id="footer-links">
+      <a href="https://twitter.com/" class="footer-link" target="_blank"><i class="fa fa-twitter"></i></a>
+      <a href="https://github.com/zqk09/blog" class="footer-link" target="_blank"><i class="fa fa-github-alt"></i></a>
+    </div>
+  </div>
+</footer>
+
+  </div>
+  <div id="mobile-nav-dimmer"></div>
+  <nav id="mobile-nav">
+  <div id="mobile-nav-inner">
+    <ul id="mobile-nav-list">
+      <a href="/docs/" class="mobile-nav-link">文档</a><a href="/api/" class="mobile-nav-link">API</a><a href="/concurrency/" class="mobile-nav-link">并发</a><a href="/news/" class="mobile-nav-link">新闻</a><a href="/plugins/" class="mobile-nav-link">插件</a><a href="/themes/" class="mobile-nav-link">主题</a>
+      <li class="mobile-nav-item">
+        <a href="https://github.com/zqk09/blog" class="mobile-nav-link" rel="external" target="_blank">GitHub</a>
+      </li>
+    </ul>
+    
+      <strong class="mobile-nav-title">基础</strong><a href="preface.html" class="mobile-nav-link">前言</a><a href="thread_basic.html" class="mobile-nav-link current">线程基础</a>
+    
+  </div>
+  <div id="mobile-lang-select-wrap">
+    <span id="mobile-lang-select-label"><i class="fa fa-globe"></i><span>简体中文</span></span>
+    <select id="mobile-lang-select" data-canonical="">
+      
+        <option value="zh-cn" selected>简体中文</option>
+      
+        <option value="en">English</option>
+      
+    </select>
+  </div>
+</nav>
+  <!-- Scripts -->
+<!-- Cookie -->
+<script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+<!-- build:js build/js/main.js -->
+<script src="/js/lang_select.js"></script>
+<script src="/js/toc.js"></script>
+<script src="/js/mobile_nav.js"></script>
+<!-- endbuild -->
+
+<!-- Algolia -->
+
+
+</body>
+</html>
